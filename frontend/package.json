@@ -1,0 +1,40 @@
+{
+  "name": "linces-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "start": "node server.js",
+    "preview": "vite build && node server.js",
+    "lint": "oxlint",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "compression": "^1.8.2",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "http-proxy-middleware": "^4.2.1",
+    "lucide-react": "^1.68.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router": "^8.5.1",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.89.0",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.5"
+  },
+  "description": "Frontend React + Vite de Linces ITC y gateway de producción",
+  "engines": {
+    "node": "22.x"
+  }
+}

@@ -1,0 +1,89 @@
+# Render Blueprint — despliega los 3 servicios de Linces ITC de una vez.
+# Render Dashboard → New → Blueprint → selecciona este repositorio.
+# Las variables con `sync: false` te las pedirá Render al crear el Blueprint.
+services:
+  # ── 1. Backend local (BFF): único que habla con el API SII ITC ────────────
+  - type: web
+    name: linces-bff
+    runtime: node
+    plan: free
+    rootDir: bff
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SII_BASE_URL
+        value: https://sii.celaya.tecnm.mx/api
+      - key: SUPABASE_CORE_URL
+        sync: false
+      - key: SUPABASE_CORE_SECRET_KEY
+        sync: false
+      - key: SESSION_ENC_KEY
+        generateValue: true
+      - key: GATEWAY_KEY
+        generateValue: true
+      - key: VACANTES_URL # https://linces-vacantes.onrender.com (URL pública de abajo)
+        sync: false
+      - key: VACANTES_INTERNAL_KEY
+        fromService:
+          type: web
+          name: linces-vacantes
+          envVarKey: INTERNAL_KEY
+      - key: ALLOWED_ORIGINS # https://linces-itc.onrender.com (URL del frontend)
+        sync: false
+      - key: TRUST_PROXY
+        value: "2"
+
+  # ── 2. Funcionalidad adicional + backend de administración ────────────────
+  - type: web
+    name: linces-vacantes
+    runtime: node
+    plan: free
+    rootDir: vacantes-service
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_VACANTES_URL
+        sync: false
+      - key: SUPABASE_VACANTES_SECRET_KEY
+        sync: false
+      - key: INTERNAL_KEY
+        generateValue: true
+      - key: GATEWAY_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: TRUST_PROXY
+        value: "2"
+
+  # ── 3. Frontend React + Vite servido por su gateway (server.js) ───────────
+  - type: web
+    name: linces-itc
+    runtime: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BFF_URL # https://linces-bff.onrender.com
+        sync: false
+      - key: ADMIN_SERVICE_URL # https://linces-vacantes.onrender.com
+        sync: false
+      - key: BFF_GATEWAY_KEY
+        fromService:
+          type: web
+          name: linces-bff
+          envVarKey: GATEWAY_KEY
+      - key: ADMIN_GATEWAY_KEY
+        fromService:
+          type: web
+          name: linces-vacantes
+          envVarKey: GATEWAY_KEY
