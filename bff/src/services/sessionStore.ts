@@ -27,6 +27,9 @@ export async function createSession(opts: {
   // La sesión nunca dura más que el propio token del SII
   const expiraEn = jwtExp && jwtExp < maxExp ? jwtExp : maxExp
 
+  // Una sola sesión activa por alumno: al entrar desde otro navegador o dispositivo, las anteriores se cierran
+  await db.from('sesiones').delete().eq('numero_control', opts.numeroControl)
+
   const { error } = await db.from('sesiones').insert({
     id_hash: sha256(sid),
     numero_control: opts.numeroControl,
@@ -48,7 +51,8 @@ export async function getSession(sid: string): Promise<Session> {
     .maybeSingle()
 
   if (error) throw new Error(`Error leyendo sesión: ${error.message}`)
-  if (!data) throw Errors.noSession()
+  // Había cookie pero la sesión ya no existe: se cerró en otra pestaña, otro dispositivo o expiró
+  if (!data) throw Errors.closed()
 
   const now = Date.now()
   const expiraEn = new Date(data.expira_en)

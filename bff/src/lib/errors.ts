@@ -6,6 +6,7 @@ export type ErrorCode =
   | 'NO_SESSION'
   | 'SESSION_EXPIRED'
   | 'SESSION_IDLE'
+  | 'SESSION_CLOSED'
   | 'TOKEN_EXPIRED'
   | 'CSRF'
   | 'FORBIDDEN'
@@ -30,6 +31,8 @@ export class AppError extends Error {
 
 export const Errors = {
   noSession: () => new AppError(401, 'NO_SESSION', 'No has iniciado sesión.'),
+  closed: () =>
+    new AppError(401, 'SESSION_CLOSED', 'Tu sesión se cerró porque entraste desde otro navegador o dispositivo, o la cerraste en otra pestaña.'),
   expired: () => new AppError(401, 'SESSION_EXPIRED', 'Tu sesión expiró. Vuelve a iniciar sesión.'),
   idle: () => new AppError(401, 'SESSION_IDLE', 'Tu sesión se cerró por inactividad.'),
   tokenRejected: () =>
