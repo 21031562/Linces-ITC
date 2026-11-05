@@ -7,6 +7,7 @@ import { api } from '../lib/api'
 import { n1, titulo } from '../lib/format'
 import type { Calificaciones as Cal, MateriaCalificacion, Semaforo } from '../lib/types'
 import { useApi } from '../lib/useApi'
+import '../styles/dark-pages.css'
 
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -37,7 +38,7 @@ export default function Calificaciones() {
   }, [data, q, periodo, color])
 
   return (
-    <div className="page">
+    <div className="page dark-page">
       <PageHeader titulo="Calificaciones" icon={<ClipboardList size={26} aria-hidden />}>
         {data?.periodos.length ? `Periodo ${data.periodos.map((p) => titulo(p.descripcion)).join(', ')}` : 'Tus calificaciones por unidad del periodo actual'}
       </PageHeader>

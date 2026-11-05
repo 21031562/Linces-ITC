@@ -7,6 +7,7 @@ import { ApiError, api } from '../lib/api'
 import { ESTADO_LABEL, TIPO_LABEL, fechaCorta } from '../lib/format'
 import type { EstadoPostulacion, MiPostulacion } from '../lib/types'
 import { useApi } from '../lib/useApi'
+import '../styles/dark-pages.css'
 
 const PASOS: EstadoPostulacion[] = ['pendiente', 'en_revision', 'aceptada']
 
@@ -28,7 +29,7 @@ export default function MisPostulaciones() {
   }
 
   return (
-    <div className="page">
+    <div className="page dark-page">
       <PageHeader titulo="Mis postulaciones" icon={<Send size={24} aria-hidden />}>
         El estado lo actualiza la coordinación de cada vacante.
       </PageHeader>

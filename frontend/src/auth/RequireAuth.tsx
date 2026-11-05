@@ -4,10 +4,10 @@ import { FullScreenLoader } from '../components/Feedback'
 
 /** Ruta privada: sin sesión válida (inexistente o expirada) regresa al login. */
 export function RequireAuth() {
-  const { status } = useAuth()
+  const { status, motivo } = useAuth()
   const location = useLocation()
   if (status === 'loading') return <FullScreenLoader texto="Verificando tu sesión" />
-  if (status === 'anon') return <Navigate to="/login" replace state={{ motivo: 'NO_SESSION', desde: location.pathname }} />
+  if (status === 'anon') return <Navigate to="/login" replace state={{ motivo: motivo ?? 'NO_SESSION', desde: location.pathname }} />
   return <Outlet />
 }
 

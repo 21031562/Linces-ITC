@@ -6,6 +6,7 @@ import { api } from '../lib/api'
 import { DIA_HOY, DIA_LABEL, titulo } from '../lib/format'
 import type { Dia, Horario as H } from '../lib/types'
 import { useApi } from '../lib/useApi'
+import '../styles/dark-pages.css'
 
 const SLOT = 30 // minutos por fila de la cuadrícula
 const aMin = (hhmm: string) => {
@@ -19,7 +20,7 @@ export default function Horario() {
   const [diaMovil, setDiaMovil] = useState<Dia>(DIA_HOY === 'domingo' ? 'lunes' : DIA_HOY)
 
   return (
-    <div className="page">
+    <div className="page dark-page">
       <PageHeader titulo="Horario" icon={<CalendarDays size={26} aria-hidden />}>
         {data?.periodo ? `${titulo(data.periodo.descripcion)}${data.plan ? `, plan ${data.plan}` : ''}` : 'Tus clases del semestre actual'}
       </PageHeader>

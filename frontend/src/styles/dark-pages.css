@@ -1,0 +1,511 @@
+/* ============================================================================
+   Páginas internas con el mismo panel oscuro verde del dashboard.
+   Se activa agregando la clase .dark-page al contenedor .page
+   ========================================================================== */
+.page.dark-page {
+  --b-bg: #0f2418;
+  --b-card: #15301f;
+  --b-card-2: #1a3a27;
+  --b-input: #0b1c12;
+  --b-line: rgba(255, 255, 255, 0.08);
+  --b-line-2: rgba(255, 255, 255, 0.05);
+  --b-text: #e8f5ec;
+  --b-muted: #8fb39c;
+  --b-accent: #4ade80;
+  --b-coral: #ff7a6b;
+  --b-gold: #fbbf24;
+
+  margin: 32px auto 56px;
+  padding: 28px 28px 32px;
+  border-radius: 22px;
+  background: var(--b-bg);
+  color: var(--b-text);
+  box-shadow: 0 24px 60px rgba(8, 28, 16, 0.35), 0 2px 6px rgba(8, 28, 16, 0.2);
+}
+.dark-page h1,
+.dark-page h2,
+.dark-page h3,
+.dark-page strong {
+  color: var(--b-text);
+}
+.dark-page .muted,
+.dark-page .page-sub,
+.dark-page small.muted {
+  color: var(--b-muted);
+}
+.dark-page .page-header h1 svg,
+.dark-page .panel-title svg {
+  color: var(--b-accent);
+}
+.dark-page a,
+.dark-page .link {
+  color: var(--b-accent);
+}
+
+/* ── Superficies ─────────────────────────────────────────────────────────── */
+.dark-page .panel,
+.dark-page .summary-strip,
+.dark-page .table-wrap,
+.dark-page .semestre,
+.dark-page .vacante,
+.dark-page .post,
+.dark-page .grade-card,
+.dark-page .week {
+  background: var(--b-card);
+  border-color: var(--b-line);
+  box-shadow: none;
+  color: var(--b-text);
+}
+.dark-page .summary-strip > div span:last-child {
+  color: var(--b-muted);
+}
+.dark-page .summary-num {
+  color: var(--b-text);
+}
+.dark-page .summary-strip > div:first-child .summary-num {
+  color: var(--b-accent);
+}
+
+/* ── Controles ───────────────────────────────────────────────────────────── */
+.dark-page input:not([type='checkbox']),
+.dark-page select,
+.dark-page textarea {
+  background: var(--b-input);
+  border-color: var(--b-line);
+  color: var(--b-text);
+}
+.dark-page input::placeholder,
+.dark-page textarea::placeholder {
+  color: #6b8a76;
+}
+.dark-page input:focus,
+.dark-page select:focus,
+.dark-page textarea:focus {
+  border-color: var(--b-accent);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
+}
+.dark-page select option {
+  background: #0f2418;
+  color: var(--b-text);
+}
+.dark-page .search > svg {
+  color: var(--b-muted);
+}
+.dark-page .icon-btn {
+  color: var(--b-muted);
+}
+.dark-page .icon-btn:hover {
+  background: var(--b-card-2);
+  color: var(--b-text);
+}
+.dark-page .btn {
+  background: var(--b-card-2);
+  border-color: var(--b-line);
+  color: var(--b-text);
+}
+.dark-page .btn:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.dark-page .btn.primary {
+  background: linear-gradient(135deg, #34d36f, #1d8a46);
+  border-color: transparent;
+  color: #04210f;
+  box-shadow: 0 6px 18px rgba(52, 211, 111, 0.25);
+}
+.dark-page .btn.danger {
+  background: var(--b-coral);
+  border-color: transparent;
+  color: #2a0905;
+}
+.dark-page .btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--b-muted);
+}
+.dark-page .btn.ghost:hover {
+  background: var(--b-card-2);
+  color: var(--b-text);
+}
+.dark-page .segmented {
+  background: var(--b-card);
+  border-color: var(--b-line);
+}
+.dark-page .segmented button {
+  color: var(--b-muted);
+}
+.dark-page .segmented button.on {
+  background: linear-gradient(135deg, #34d36f, #1d8a46);
+  color: #04210f;
+}
+.dark-page .switch {
+  color: var(--b-text);
+}
+.dark-page .switch input {
+  accent-color: var(--b-accent);
+}
+.dark-page .day-tabs button {
+  background: var(--b-card);
+  border-color: var(--b-line);
+  color: var(--b-muted);
+}
+.dark-page .day-tabs button.on {
+  background: linear-gradient(135deg, #34d36f, #1d8a46);
+  border-color: transparent;
+  color: #04210f;
+}
+
+/* ── Chips, semáforo y calificaciones ────────────────────────────────────── */
+.dark-page .chip.verde,
+.dark-page .grade.verde {
+  background: rgba(74, 222, 128, 0.14);
+  color: #86efac;
+}
+.dark-page .chip.amarillo,
+.dark-page .grade.amarillo {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+}
+.dark-page .chip.rojo {
+  background: rgba(255, 122, 107, 0.14);
+  color: #ffa69b;
+}
+.dark-page .grade.rojo {
+  background: var(--b-coral);
+  color: #2a0905;
+}
+.dark-page .grade.gris {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--b-muted);
+}
+.dark-page .dot.amarillo {
+  background: var(--b-gold);
+}
+.dark-page .dot.verde {
+  background: var(--b-accent);
+}
+.dark-page .dot.rojo {
+  background: var(--b-coral);
+}
+.dark-page .units li {
+  background: var(--b-input);
+  border-color: var(--b-line);
+  color: var(--b-text);
+}
+.dark-page .units small {
+  color: var(--b-muted);
+}
+.dark-page .units li.bad {
+  background: rgba(255, 122, 107, 0.14);
+  border-color: rgba(255, 122, 107, 0.35);
+  color: #ffa69b;
+}
+.dark-page .units li.none {
+  color: #5f7d69;
+}
+.dark-page .e-aprobando {
+  color: var(--b-accent);
+}
+.dark-page .e-en_riesgo {
+  color: var(--b-gold);
+}
+.dark-page .e-reprobando {
+  color: var(--b-coral);
+}
+.dark-page .e-sin_captura {
+  color: var(--b-muted);
+}
+.dark-page .grade-card {
+  border-top-color: var(--b-line);
+}
+.dark-page .grade-card.s-verde {
+  border-top-color: var(--b-accent);
+}
+.dark-page .grade-card.s-amarillo {
+  border-top-color: var(--b-gold);
+}
+.dark-page .grade-card.s-rojo {
+  border-top-color: var(--b-coral);
+}
+
+/* ── Tablas ──────────────────────────────────────────────────────────────── */
+.dark-page .table th {
+  background: var(--b-card-2);
+  color: var(--b-muted);
+  border-bottom-color: var(--b-line);
+}
+.dark-page .table td {
+  border-bottom-color: var(--b-line-2);
+}
+.dark-page .table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+.dark-page .row-bad td {
+  background: rgba(255, 122, 107, 0.06);
+}
+.dark-page .table-wrap.flat {
+  border-top-color: var(--b-line);
+}
+
+/* ── Kardex ──────────────────────────────────────────────────────────────── */
+.dark-page .semestre-head {
+  color: var(--b-text);
+}
+.dark-page .semestre-n {
+  background: rgba(74, 222, 128, 0.14);
+  color: var(--b-accent);
+}
+.dark-page .semestre-t small,
+.dark-page .semestre-avg {
+  color: var(--b-muted);
+}
+.dark-page .semestre-avg strong {
+  color: var(--b-accent);
+}
+.dark-page .chev {
+  color: var(--b-muted);
+}
+
+/* ── Horario ─────────────────────────────────────────────────────────────── */
+.dark-page .week-corner,
+.dark-page .week-day {
+  background: var(--b-card-2);
+  border-color: var(--b-line);
+  color: var(--b-text);
+}
+.dark-page .week-hour {
+  color: var(--b-muted);
+  border-top-color: var(--b-line-2);
+}
+.dark-page .week-col {
+  border-left-color: var(--b-line-2);
+  background-image: linear-gradient(var(--b-line-2) 1px, transparent 1px);
+}
+.dark-page .week-col.today {
+  background-color: rgba(251, 191, 36, 0.05);
+}
+.dark-page .week-day small {
+  background: var(--b-gold);
+  color: #1d1400;
+}
+/* Paleta de materias para fondo oscuro */
+.dark-page .c0 { background: rgba(96, 165, 250, 0.16); border-color: #60a5fa; color: #e8f5ec; }
+.dark-page .c1 { background: rgba(251, 191, 36, 0.16); border-color: #fbbf24; color: #e8f5ec; }
+.dark-page .c2 { background: rgba(74, 222, 128, 0.16); border-color: #4ade80; color: #e8f5ec; }
+.dark-page .c3 { background: rgba(248, 113, 113, 0.16); border-color: #f87171; color: #e8f5ec; }
+.dark-page .c4 { background: rgba(167, 139, 250, 0.16); border-color: #a78bfa; color: #e8f5ec; }
+.dark-page .c5 { background: rgba(34, 211, 238, 0.16); border-color: #22d3ee; color: #e8f5ec; }
+.dark-page .c6 { background: rgba(251, 146, 60, 0.16); border-color: #fb923c; color: #e8f5ec; }
+.dark-page .c7 { background: rgba(148, 163, 184, 0.16); border-color: #94a3b8; color: #e8f5ec; }
+.dark-page .c8 { background: rgba(244, 114, 182, 0.16); border-color: #f472b6; color: #e8f5ec; }
+.dark-page .c9 { background: rgba(163, 230, 53, 0.16); border-color: #a3e635; color: #e8f5ec; }
+.dark-page .week-block strong {
+  color: #ffffff;
+}
+.dark-page .swatch.c0 { background: #60a5fa; }
+.dark-page .swatch.c1 { background: #fbbf24; }
+.dark-page .swatch.c2 { background: #4ade80; }
+.dark-page .swatch.c3 { background: #f87171; }
+.dark-page .swatch.c4 { background: #a78bfa; }
+.dark-page .swatch.c5 { background: #22d3ee; }
+.dark-page .swatch.c6 { background: #fb923c; }
+.dark-page .swatch.c7 { background: #94a3b8; }
+.dark-page .swatch.c8 { background: #f472b6; }
+.dark-page .swatch.c9 { background: #a3e635; }
+
+/* ── Bolsa y postulaciones ───────────────────────────────────────────────── */
+.dark-page .vacante.elegible {
+  border-left-color: var(--b-accent);
+}
+.dark-page .vacante.bloqueada {
+  border-left-color: rgba(255, 255, 255, 0.12);
+}
+.dark-page .vacante-org,
+.dark-page .meta {
+  color: var(--b-muted);
+}
+.dark-page .vacante-req {
+  border-left-color: var(--b-line);
+  border-top-color: var(--b-line);
+}
+.dark-page .urgente {
+  color: var(--b-coral);
+}
+.dark-page .t-servicio_social {
+  background: rgba(96, 165, 250, 0.16);
+  color: #93c5fd;
+}
+.dark-page .t-residencia {
+  background: rgba(251, 191, 36, 0.16);
+  color: #fcd34d;
+}
+.dark-page .t-proyecto {
+  background: rgba(167, 139, 250, 0.16);
+  color: #c4b5fd;
+}
+.dark-page .checks .ok svg,
+.dark-page .req-table .ok svg {
+  color: var(--b-accent);
+}
+.dark-page .checks .no,
+.dark-page .req-table .no {
+  color: #ffa69b;
+}
+.dark-page .req-table li {
+  background: var(--b-card);
+}
+.dark-page .req-table li.no {
+  background: rgba(255, 122, 107, 0.12);
+}
+.dark-page .p-pendiente.estado-post {
+  background: rgba(96, 165, 250, 0.16);
+  color: #93c5fd;
+}
+.dark-page .p-en_revision.estado-post {
+  background: rgba(251, 191, 36, 0.16);
+  color: #fcd34d;
+}
+.dark-page .p-aceptada.estado-post {
+  background: var(--b-accent);
+  color: #04210f;
+}
+.dark-page .p-rechazada.estado-post {
+  background: rgba(255, 122, 107, 0.16);
+  color: #ffa69b;
+}
+.dark-page .p-cancelada.estado-post {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--b-muted);
+}
+.dark-page .steps li {
+  color: #5f7d69;
+}
+.dark-page .steps li::before {
+  background: rgba(255, 255, 255, 0.08);
+}
+.dark-page .steps li.done {
+  color: var(--b-text);
+}
+.dark-page .steps li.done::before {
+  background: var(--b-accent);
+}
+.dark-page .admin-note {
+  background: var(--b-input);
+  border-left-color: var(--b-gold);
+  color: var(--b-text);
+}
+.dark-page .admin-note svg {
+  color: var(--b-gold);
+}
+
+/* Panel lateral de detalle de vacante */
+.dark-page .drawer {
+  background: #0f2418;
+  color: var(--b-text);
+  border-left: 1px solid var(--b-line);
+}
+.dark-page .facts div {
+  background: var(--b-card);
+}
+.dark-page .facts dt {
+  color: var(--b-muted);
+}
+.dark-page .tags li {
+  border-color: var(--b-line);
+  color: var(--b-text);
+}
+
+/* Avisos */
+.dark-page .notice.info {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: rgba(96, 165, 250, 0.3);
+  color: var(--b-text);
+}
+.dark-page .notice.warn {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: var(--b-text);
+}
+.dark-page .notice.error {
+  background: rgba(255, 122, 107, 0.1);
+  border-color: rgba(255, 122, 107, 0.35);
+  color: #ffd2cc;
+}
+.dark-page .notice.ok {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.3);
+  color: var(--b-text);
+}
+
+/* Pista de créditos dentro de la bolsa */
+.dark-page .track-num {
+  color: var(--b-accent);
+}
+.dark-page .track-pct,
+.dark-page .track-proj,
+.dark-page .track-legend,
+.dark-page .track-hito-label small {
+  color: var(--b-muted);
+}
+.dark-page .track-proj strong {
+  color: var(--b-text);
+}
+.dark-page .track-rail {
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: none;
+}
+.dark-page .track-fill,
+.dark-page .sw.fill {
+  background: var(--b-accent);
+}
+.dark-page .track-tick {
+  background: rgba(255, 255, 255, 0.55);
+}
+.dark-page .track-hito.ok .track-tick {
+  background: var(--b-gold);
+}
+.dark-page .track-hito.ok .track-hito-label::before {
+  color: var(--b-accent);
+}
+
+/* Estados vacíos, carga y errores */
+.dark-page .empty {
+  color: var(--b-muted);
+}
+.dark-page .empty h3 {
+  color: var(--b-text);
+}
+.dark-page .skeleton {
+  background: linear-gradient(90deg, #17331f 25%, #1e4129 50%, #17331f 75%);
+  background-size: 200% 100%;
+}
+.dark-page .error-state,
+.dark-page .error-state h3,
+.dark-page .error-state strong {
+  color: var(--ink);
+}
+.dark-page .legend {
+  color: var(--b-muted);
+}
+
+/* ── Responsivo e impresión ──────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .page.dark-page {
+    margin: 16px 10px 40px;
+    padding: 20px 14px 26px;
+    border-radius: 16px;
+  }
+}
+@media print {
+  .page.dark-page {
+    background: #fff;
+    color: #000;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+  }
+  .dark-page * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}

@@ -8,6 +8,7 @@ import { CreditTrack } from '../components/CreditTrack'
 import { ESTADO_LABEL, MODALIDAD_LABEL, TIPO_LABEL, diasRestantes, fechaCorta, n1 } from '../lib/format'
 import type { TipoVacante, Vacante } from '../lib/types'
 import { useApi } from '../lib/useApi'
+import '../styles/dark-pages.css'
 
 const TIPOS: (TipoVacante | 'todas')[] = ['todas', 'servicio_social', 'residencia', 'proyecto']
 
@@ -32,7 +33,7 @@ export default function Bolsa() {
   const elegibles = (data ?? []).filter((v) => v.elegibilidad?.elegible).length
 
   return (
-    <div className="page">
+    <div className="page dark-page">
       <PageHeader titulo="Servicio social y residencias" icon={<Briefcase size={26} aria-hidden />}>
         Vacantes publicadas por áreas del Tec, empresas y dependencias. Linces revisa tus requisitos con tus datos del SII.
       </PageHeader>

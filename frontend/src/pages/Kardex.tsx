@@ -7,6 +7,7 @@ import { api } from '../lib/api'
 import { n1, nombreCompleto, titulo } from '../lib/format'
 import type { Kardex as K } from '../lib/types'
 import { useApi } from '../lib/useApi'
+import '../styles/dark-pages.css'
 
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -34,7 +35,7 @@ export default function Kardex() {
     })
 
   return (
-    <div className="page">
+    <div className="page dark-page">
       <PageHeader titulo="Kardex" icon={<BookOpenCheck size={26} aria-hidden />}>
         Historial académico completo, agrupado por semestre.
       </PageHeader>

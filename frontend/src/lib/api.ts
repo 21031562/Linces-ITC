@@ -19,6 +19,9 @@ export class ApiError extends Error {
 
 export const AUTH_MESSAGES: Record<string, string> = {
   NO_SESSION: 'Inicia sesión para continuar.',
+  SESSION_CLOSED: 'Tu sesión se cerró porque entraste desde otro navegador o dispositivo.',
+  OTRA_PESTANA: 'Cerraste sesión en otra pestaña.',
+  OTRA_CUENTA: 'Se inició sesión con otra cuenta en otra pestaña.',
   SESSION_EXPIRED: 'Tu sesión expiró. Vuelve a iniciar sesión.',
   SESSION_IDLE: 'Cerramos tu sesión por inactividad.',
   TOKEN_EXPIRED: 'El SII ya no reconoce tu sesión (token inválido o expirado). Inicia sesión de nuevo.',
