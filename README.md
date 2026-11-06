@@ -182,7 +182,7 @@ sequenceDiagram
   S-->>B: numero_control
   B->>DB: borra sesiones previas del alumno (sesión única)
   B->>DB: inserta sha256(id), JWT cifrado AES-GCM, expira = exp del JWT
-  B-->>F: Set-Cookie __Host-linces_sid=<id opaco>; HttpOnly; Secure; SameSite=Lax
+  B-->>F: Set-Cookie __Host-linces_sid=<id opaco>, HttpOnly, Secure, SameSite=Lax
   Note over F,B: La respuesta NO contiene el token
   F-->>A: redirige a /dashboard
 ```
@@ -235,9 +235,9 @@ sequenceDiagram
     B-->>A: 422 NOT_ELIGIBLE (dice qué le falta)
   end
   B->>V: POST /internal/postulaciones (+ foto de elegibilidad)
-  V->>DB: valida cupo, fecha límite y duplicado; inserta
+  V->>DB: valida cupo, fecha límite y duplicado, inserta
   C->>V: PATCH /admin/postulaciones/:id {aceptada, comentario}
-  V->>DB: valida cupo; actualiza; registra en bitácora
+  V->>DB: valida cupo, actualiza, registra en bitácora
   A->>B: GET /postulaciones → ve "Aceptada" + comentario
 ```
 
@@ -587,4 +587,3 @@ Linces-ITC/
 **Equipo**
 - Uriel Alejandro Martínez Martínez
 - Rafael Barranco Mendoza
-- _Agregar integrantes_
