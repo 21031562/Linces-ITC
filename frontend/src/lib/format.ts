@@ -43,7 +43,7 @@ export const ESTADO_LABEL: Record<EstadoPostulacion, string> = {
   pendiente: 'Enviada',
   en_revision: 'En revisión',
   aceptada: 'Aceptada',
-  rechazada: 'No seleccionada',
+  rechazada: 'Rechazada',
   cancelada: 'Cancelada',
 }
 
