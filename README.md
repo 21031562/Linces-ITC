@@ -587,3 +587,4 @@ Linces-ITC/
 **Equipo**
 - Uriel Alejandro Martínez Martínez
 - Rafael Barranco Mendoza
+- _Agregar integrantes_
