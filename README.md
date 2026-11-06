@@ -1,340 +1,578 @@
 # Linces ITC
 
-Aplicación web para estudiantes del **TecNM Campus Celaya** que consume el **API SII ITC** para mostrar perfil, calificaciones, kardex y horario. Incluye una funcionalidad propia: la **Bolsa de Servicio Social, Residencias y Proyectos**, que cruza los requisitos de cada vacante con tus datos reales del SII.
+Aplicación web para estudiantes del **TecNM Campus Celaya**. Consume el **API SII ITC** en tiempo real para mostrar perfil, calificaciones, kardex y horario. Además incluye una funcionalidad propia: la **Bolsa de Servicio Social, Residencias y Proyectos**, que cruza los requisitos de cada vacante con los datos académicos reales del alumno.
 
-> Examen 3 · Consumo de API y Desarrollo de Interfaz Web · Tópicos Avanzados de Desarrollo Web
+> Examen 3: Consumo de API y Desarrollo de Interfaz Web.
+> Materia: Tópicos Avanzados de Desarrollo Web.
 > Proyecto académico. No es un sitio oficial del TecNM.
 
-**Producción:** `https://linces-itc.onrender.com` _(actualizar con la URL real)_
+| | URL |
+|---|---|
+| Aplicación (alumnos) | https://linces-itc.onrender.com |
+| Panel de administración | https://linces-itc.onrender.com/admin/login |
+| Repositorio | https://github.com/21031562/Linces-ITC |
+
+_Si Render asignó URLs distintas, actualízalas aquí._
 
 ---
 
 ## Contenido
 
-1. [Cumplimiento del examen](#cumplimiento-del-examen)
-2. [Arquitectura](#arquitectura)
-3. [Tecnologías elegidas](#tecnologías-elegidas)
-4. [Seguridad](#seguridad)
-5. [Instalación y ejecución local](#instalación-y-ejecución-local)
-6. [Despliegue en Render](#despliegue-en-render)
-7. [Endpoints](#endpoints)
-8. [Capturas de pantalla](#capturas-de-pantalla)
-9. [Guion para la exposición](#guion-para-la-exposición)
-10. [Auditoría de seguridad](#auditoría-de-seguridad)
+1. [Cumplimiento del examen, punto por punto](#1-cumplimiento-del-examen-punto-por-punto)
+2. [Arquitectura de dos capas de backend](#2-arquitectura-de-dos-capas-de-backend)
+3. [Flujo de información](#3-flujo-de-información)
+4. [Funcionamiento de cada sección](#4-funcionamiento-de-cada-sección)
+5. [Lógica de negocio del backend local](#5-lógica-de-negocio-del-backend-local)
+6. [Tecnologías elegidas y justificación](#6-tecnologías-elegidas-y-justificación)
+7. [Seguridad](#7-seguridad)
+8. [Diseño visual](#8-diseño-visual)
+9. [Instalación y ejecución local](#9-instalación-y-ejecución-local)
+10. [Despliegue en Render](#10-despliegue-en-render)
+11. [Endpoints](#11-endpoints)
+12. [Capturas de pantalla](#12-capturas-de-pantalla)
+13. [Preguntas frecuentes para la defensa](#13-preguntas-frecuentes-para-la-defensa)
+14. [Guion de la exposición](#14-guion-de-la-exposición)
+15. [Estructura del repositorio y equipo](#15-estructura-del-repositorio-y-equipo)
 
 ---
 
-## Cumplimiento del examen
+## 1. Cumplimiento del examen, punto por punto
 
-| Punto | Requisito | Dónde se cumple |
+Cada fila cita un lineamiento del documento y dice dónde y cómo se cumple.
+
+### Objetivo general: arquitectura de dos capas de backend
+
+| Lineamiento | Cómo se cumple | Evidencia |
 |---|---|---|
-| 1 | Pantalla de login con correo y contraseña | `frontend/src/pages/Login.tsx` |
-| 1 | `POST /api/login` al SII | `bff/src/lib/sii.ts` → `siiLogin()` |
-| 1 | Guardar el JWT de forma segura | Cifrado AES-256-GCM en Supabase A; el navegador solo recibe una cookie HttpOnly con un ID opaco (`bff/src/services/sessionStore.ts`) |
-| 1 | Errores: credenciales incorrectas, servidor caído, campos vacíos | `INVALID_CREDENTIALS`, `SII_UNAVAILABLE`/`BACKEND_DOWN`, validación en cliente y en servidor (zod) |
-| 1 | Redirigir al dashboard al autenticarse | `Login.tsx` → `/dashboard` |
-| 1 | Proteger rutas: sin token o token expirado → login | `RequireAuth.tsx` + `requireSession` (lee el `exp` del JWT, inactividad de 20 min y rechazo del SII) |
-| 2 | `GET /api/movil/estudiante` con el token | `GET /api/estudiante` del BFF |
-| 2 | Dashboard con tarjetas, gráficas e íconos | Pista de créditos, 5 indicadores, gráfica de promedio por semestre, elegibilidad y clases de hoy |
-| 2 | Spinner o skeleton | `Skeleton`, `SkeletonRows`, `Spinner` (`components/Feedback.tsx`) |
-| 2 | Mensaje claro si el token es inválido | `ErrorState`: explica el motivo y regresa al login con cuenta regresiva |
-| 3 | `GET /api/movil/estudiante/calificaciones` | `GET /api/calificaciones` |
-| 3 | Tabla o tarjetas con materia, periodo y calificación final | Ambas vistas; la final es el promedio de las unidades capturadas |
-| 3 | Búsqueda en tiempo real por materia o periodo | Buscador + selector de periodo + filtro por color |
-| 3 | Semáforo verde / amarillo / rojo | ≥ 85 sin unidades reprobadas / 70–84 o alguna unidad < 70 / < 70 |
-| 4 | Kardex y horario en rutas independientes | `/kardex` y `/horario` |
-| 4 | Kardex estructurado | Agrupado por semestre (acordeón), resumen, búsqueda e impresión |
-| 4 | Horario por día y hora | Cuadrícula semanal hora × día (en móvil, por día) y vista por materia |
-| 4 | Navegación fluida | SPA con React Router; barra lateral en escritorio y barra inferior en móvil |
-| 5 | Funcionalidad original con backend de administración | Bolsa de vacantes + `vacantes-service` con panel `/admin` ([propuesta](docs/PROPUESTA.md)) |
-| Back | El SII es la única fuente de verdad y el backend local es el intermediario seguro | El navegador nunca habla con el SII; no se persisten datos académicos |
-| Entrega | README, framework, capturas y despliegue | Este archivo y `render.yaml` |
+| API ITC como backend general compartido (autenticación y datos institucionales) | Toda la autenticación y todos los datos académicos vienen del SII en vivo. No hay copia local de calificaciones, kardex ni horario. | `bff/src/lib/sii.ts` |
+| Backend local propio: lógica de negocio, persistencia y funcionalidades específicas | **BFF** (Express + TS): sesiones, cálculos y validaciones. **vacantes-service** (Express + TS): funcionalidad adicional. Persistencia en 2 proyectos de Supabase. | `bff/`, `vacantes-service/`, `supabase/` |
+| Framework moderno de la lista, usado de forma consistente | **React + Vite** en todo el frontend, incluido el panel de administración | `frontend/` |
+
+### Punto 1: Autenticación
+
+| Lineamiento | Cómo se cumple | Evidencia |
+|---|---|---|
+| Pantalla de login con correo y contraseña | Formulario con validación, botón para mostrar u ocultar la contraseña y estado de carga | `frontend/src/pages/Login.tsx` |
+| `POST /api/login` mediante solicitud HTTP | El navegador envía las credenciales al BFF y el BFF hace `POST https://sii.celaya.tecnm.mx/api/login` | `bff/src/routes/auth.ts`, `bff/src/lib/sii.ts → siiLogin()` |
+| Almacenar de forma segura el token JWT | El JWT se guarda **cifrado con AES-256-GCM** en Supabase A, ligado a un ID de sesión aleatorio de 256 bits. El navegador solo recibe ese ID en una cookie `HttpOnly; Secure; SameSite=Lax; __Host-`. El token **nunca llega al navegador**, así que no está en `localStorage`, ni en `document.cookie`, ni en la pestaña Red. | `bff/src/services/sessionStore.ts`, `bff/src/lib/crypto.ts` |
+| Errores: credenciales incorrectas | El SII responde HTTP 200 con `status: 401` en el body. El BFF lo detecta y responde `401 INVALID_CREDENTIALS`. | `sii.ts → siiLogin()` |
+| Errores: servidor no disponible | Timeout de 10 s, errores de red o 5xx del SII se convierten en `503 SII_UNAVAILABLE`. Si nuestro propio backend está dormido, el frontend muestra `BACKEND_DOWN`. | `sii.ts`, `frontend/src/lib/api.ts` |
+| Errores: campos vacíos | Se valida en el cliente (mensaje por campo) y también en el servidor (zod, `400`) | `Login.tsx`, `auth.ts → loginSchema` |
+| Redirigir al dashboard tras autenticar | `navigate('/dashboard')` | `Login.tsx` |
+| Proteger rutas: si el token no existe **o expiró**, regresar al login | `RequireAuth` envuelve todas las rutas privadas. El servidor valida en cada petición: que la sesión exista, la expiración leída del `exp` del JWT, 20 min de inactividad y el rechazo del SII. El cliente programa el cierre al vencer el token. | `frontend/src/auth/RequireAuth.tsx`, `AuthContext.tsx`, `bff/src/middleware/session.ts` |
+
+### Punto 2: Información del estudiante
+
+| Lineamiento | Cómo se cumple | Evidencia |
+|---|---|---|
+| Consumir `GET /api/movil/estudiante` con el JWT | El BFF lo llama con `Authorization: Bearer <token descifrado>` | `bff/src/routes/academico.ts → /estudiante` |
+| Dashboard personalizado con el perfil | Saludo con nombre, foto, número de control, correo, semestre, promedios, créditos y materias | `frontend/src/pages/Dashboard.tsx` |
+| Indicadores visuales (tarjetas, gráficas, íconos) | Tarjetas de KPI; gráfica de área del promedio por semestre; anillos de progreso hacia servicio social, residencia y egreso; medio anillo de créditos complementarios; clases de hoy | `Dashboard.tsx`, `styles/dashboard.css` |
+| Spinner o skeleton | Skeleton de todo el panel mientras carga, y skeletons por tarjeta (gráfica, clases) | `DashboardSkeleton`, `components/Feedback.tsx` |
+| Mensaje claro si el token es inválido o falla la solicitud | `ErrorState` explica el motivo (sesión expirada, token rechazado por el SII, SII caído), ofrece **Reintentar** o **Iniciar sesión** y redirige con cuenta regresiva | `components/Feedback.tsx` |
+
+### Punto 3: Calificaciones
+
+| Lineamiento | Cómo se cumple | Evidencia |
+|---|---|---|
+| Consumir `GET /api/movil/estudiante/calificaciones` | `GET /api/calificaciones` del BFF | `academico.ts` |
+| Tabla o tarjetas | Las dos vistas, con un selector para cambiar entre ellas | `pages/Calificaciones.tsx` |
+| Nombre de materia, periodo y **calificación final** | El SII solo entrega parciales (en el campo `calificaiones`, así viene escrito en el API). El BFF calcula la final como el promedio de las unidades capturadas y además muestra cada unidad. | `bff/src/services/academico.ts → calificaciones()` |
+| Búsqueda en tiempo real por materia o periodo | El buscador filtra por nombre, clave o periodo; hay selector de periodo y filtro por color | `Calificaciones.tsx` |
+| Semáforo verde / amarillo / rojo | **Verde** ≥ 85 sin unidades reprobadas. **Amarillo** 70–84, o alguna unidad < 70. **Rojo** < 70. Hay leyenda visible y la mínima aprobatoria del TecNM es 70. | `academico.ts → semaforo()` |
+
+### Punto 4: Kardex y horario
+
+| Lineamiento | Cómo se cumple | Evidencia |
+|---|---|---|
+| Consumir los endpoints de kardex y horarios | `GET /api/kardex` y `GET /api/horario` del BFF | `academico.ts` |
+| Rutas independientes | `/kardex` y `/horario` | `frontend/src/App.tsx` |
+| Kardex completo y estructurado | Agrupado por semestre en acordeón, con créditos y promedio por semestre; resumen general (avance, créditos, promedio, aprobadas); búsqueda e impresión | `pages/Kardex.tsx` |
+| Horario por día y hora | Cuadrícula semanal hora × día con salón (en celular, un día a la vez) y vista alterna por materia | `pages/Horario.tsx` |
+| Navegación fluida | SPA con React Router y menú superior fijo; no se recarga la página | `components/Layout.tsx` |
+
+### Punto 5: Funcionalidad adicional
+
+| Lineamiento | Cómo se cumple | Evidencia |
+|---|---|---|
+| Original y con valor real para los estudiantes | **Bolsa de Servicio Social, Residencias y Proyectos**: dice al alumno en qué vacantes califica según su avance real en el SII | [docs/PROPUESTA.md](docs/PROPUESTA.md) |
+| Su propio backend de administración | `vacantes-service` con autenticación propia (bcrypt), roles `admin` y `revisor`, CRUD de organizaciones y vacantes, revisión de postulaciones, estadísticas y bitácora | `vacantes-service/src/routes/admin.ts`, `frontend/src/admin/` |
+| La información puede ser simulada | Organizaciones y vacantes de ejemplo **ficticias**. Los puntos 1 a 4 nunca usan datos simulados. | `supabase/vacantes/002_seed_simulado.sql` |
+| Propuesta que justifique la utilidad | Problema, solución, beneficios y por qué es confiable | [docs/PROPUESTA.md](docs/PROPUESTA.md) |
+
+### Backend, entregables e indicaciones finales
+
+| Lineamiento | Cómo se cumple |
+|---|---|
+| El SII es la **única fuente de verdad** para autenticación y datos académicos | El login se valida contra el SII. Los datos académicos se consultan en vivo en cada petición. En nuestra base solo guardamos sesiones (token cifrado) y una foto mínima de elegibilidad al postular (avance, promedio, semestre y créditos), como evidencia. |
+| El backend local es un **intermediario seguro** | El navegador nunca habla con el SII. Solo conoce `/api/*` de su propio dominio; el gateway lo reenvía al BFF y el BFF al SII. |
+| Lógica de negocio y funcionalidad adicional en el backend | Ver la [sección 5](#5-lógica-de-negocio-del-backend-local) |
+| "Interactuar directamente con la API del SII (no simular respuestas para 1 a 4)" | Cada pantalla de los puntos 1 a 4 se alimenta de una llamada real al SII en ese momento; no hay datos de respaldo, caché persistente ni respuestas simuladas. La intermediación del BFF es la que exige la sección **BackEnd** del mismo documento. |
+| Repositorio en GitHub | https://github.com/21031562/Linces-ITC |
+| README con instalación, descripción del framework y capturas | Secciones [9](#9-instalación-y-ejecución-local), [6](#6-tecnologías-elegidas-y-justificación) y [12](#12-capturas-de-pantalla) |
+| Publicar en Vercel o similar | Render (3 servicios con un Blueprint, `render.yaml`) |
+| Creatividad, calidad visual y diseño adicional | Tema verde Linces con logo y fondo propios, paneles oscuros con gráficas de área, anillos de progreso, pista de créditos y diseño responsivo. Ver la [sección 8](#8-diseño-visual). |
+| Justificación del framework | [Sección 6](#6-tecnologías-elegidas-y-justificación) |
 
 ---
 
-## Arquitectura
+## 2. Arquitectura de dos capas de backend
 
-**Datos centralizados, operación descentralizada.** El SII es la fuente única de autenticación y datos académicos, y cada base de Supabase pertenece a un solo servicio. Los tres servicios se despliegan, escalan y fallan de forma independiente.
+**Los datos están centralizados y la operación está descentralizada.**
+- El SII es la fuente única de los datos académicos, y cada base de Supabase pertenece a un solo servicio.
+- Los tres servicios se despliegan, escalan y fallan de forma independiente.
 
 ```mermaid
 flowchart LR
-  N[Navegador] -- "mismo origen: /api, /admin-api" --> F["Frontend + gateway<br/>(React + Vite, server.js)"]
-  F -- "/api/* + x-gateway-key" --> B["BFF · backend local<br/>(Express + TS)"]
-  F -- "/admin-api/* → /admin/*" --> V["vacantes-service<br/>(Express + TS)"]
-  B -- "Bearer JWT (solo servidor)" --> S[("API SII ITC<br/>fuente de verdad")]
-  B -- "sesiones cifradas, auditoría" --> A[("Supabase A · core")]
+  subgraph Navegador
+    U[Alumno / Coordinador]
+  end
+  subgraph Render
+    F["linces-itc<br/>React + Vite + gateway (server.js)"]
+    B["linces-bff<br/>Backend local (Express + TS)"]
+    V["linces-vacantes<br/>Funcionalidad adicional + admin (Express + TS)"]
+  end
+  S[("API SII ITC<br/>Capa 1: backend general<br/>fuente de verdad")]
+  A[("Supabase A · core<br/>sesiones cifradas, auditoría")]
+  C[("Supabase B · vacantes<br/>organizaciones, vacantes,<br/>postulaciones, admins, bitácora")]
+
+  U -- "HTTPS, mismo origen<br/>/api y /admin-api" --> F
+  F -- "/api/* + x-gateway-key" --> B
+  F -- "/admin-api/* → /admin/* + x-gateway-key" --> V
+  B -- "Bearer JWT (solo servidor)" --> S
+  B --> A
   B -- "/internal/* + x-internal-key" --> V
-  V -- "vacantes, postulaciones, admins" --> C[("Supabase B · vacantes")]
+  V --> C
 ```
 
-| Servicio | Carpeta | Responsabilidad | Base de datos |
+| Capa | Servicio | Responsabilidad | Datos |
 |---|---|---|---|
-| Frontend + gateway | `frontend/` | Interfaz del alumno y del panel admin; reenvía `/api` y `/admin-api` del lado del servidor | — |
-| BFF (backend local) | `bff/` | Login contra el SII, sesiones, consumo del SII, normalización (calificación final, semáforo, kardex por semestre, horario), elegibilidad | Supabase A |
-| vacantes-service | `vacantes-service/` | Bolsa de vacantes: API interna para el BFF y API de administración con auth propia | Supabase B |
+| Presentación | `linces-itc` (frontend + gateway) | Interfaz del alumno y del panel admin. Reenvía `/api` y `/admin-api` del lado del servidor e inyecta las llaves. | — |
+| **Backend general (capa 1)** | **API SII ITC** | Autenticación y datos institucionales | Base del TecNM |
+| **Backend local (capa 2)** | `linces-bff` | Intermediario seguro: login, sesiones, consumo del SII, cálculos (calificación final, semáforo, kardex por semestre, horario), elegibilidad | Supabase A |
+| **Backend local (capa 2)** | `linces-vacantes` | Bolsa de vacantes: API interna para el BFF y API de administración con auth propia | Supabase B |
 
-### Flujo de login
-
-```
-1. Navegador ──POST /api/auth/login {email,password}──▶ gateway ──▶ BFF
-2. BFF ──POST https://sii.celaya.tecnm.mx/api/login──▶ SII   (HTTP 200 siempre; el estado real viene en body.status)
-3. BFF ──GET /movil/estudiante──▶ SII (número de control)
-4. BFF guarda en Supabase A: sha256(id_sesión), JWT cifrado AES-256-GCM, expira_en = exp del JWT
-5. BFF ──Set-Cookie: __Host-linces_sid=<id aleatorio>; HttpOnly; Secure; SameSite=Lax──▶ navegador
-   (la respuesta NO contiene el token)
-```
+**¿Por qué el gateway?** `onrender.com` está en la *Public Suffix List*: dos subdominios de Render (`linces-itc` y `linces-bff`) cuentan como **sitios distintos** y las cookies entre ellos serían de terceros, que los navegadores bloquean. Con el gateway, el navegador solo habla con su propio dominio: la cookie es *first-party* y las URLs de los backends nunca se exponen.
 
 ---
 
-## Tecnologías elegidas
+## 3. Flujo de información
+
+### 3.1 Inicio de sesión
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor A as Alumno
+  participant F as Frontend + gateway
+  participant B as BFF
+  participant S as API SII ITC
+  participant DB as Supabase A
+  A->>F: correo + contraseña
+  F->>B: POST /auth/login (+ x-gateway-key, x-linces-csrf)
+  B->>B: valida campos (zod) y rate limit
+  B->>S: POST /api/login
+  S-->>B: 200 { status, message.login.token }
+  alt credenciales incorrectas
+    B-->>F: 401 INVALID_CREDENTIALS
+  else SII caído / timeout
+    B-->>F: 503 SII_UNAVAILABLE
+  end
+  B->>S: GET /api/movil/estudiante (Bearer)
+  S-->>B: numero_control
+  B->>DB: borra sesiones previas del alumno (sesión única)
+  B->>DB: inserta sha256(id), JWT cifrado AES-GCM, expira = exp del JWT
+  B-->>F: Set-Cookie __Host-linces_sid=<id opaco>; HttpOnly; Secure; SameSite=Lax
+  Note over F,B: La respuesta NO contiene el token
+  F-->>A: redirige a /dashboard
+```
+
+### 3.2 Consulta académica (dashboard, calificaciones, kardex, horario)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant F as Frontend
+  participant B as BFF
+  participant DB as Supabase A
+  participant S as API SII ITC
+  F->>B: GET /calificaciones (cookie)
+  B->>DB: busca sha256(cookie)
+  alt no existe / expiró / inactiva
+    B-->>F: 401 (NO_SESSION, SESSION_EXPIRED, SESSION_IDLE, SESSION_CLOSED)
+    F-->>F: ErrorState → login con el motivo
+  end
+  B->>B: descifra el JWT en memoria
+  B->>S: GET /movil/estudiante/calificaciones (Bearer)
+  alt el SII rechaza el token
+    B->>DB: elimina la sesión
+    B-->>F: 401 TOKEN_EXPIRED
+  end
+  S-->>B: datos crudos
+  B->>B: calcula calificación final, semáforo y resumen
+  B-->>F: JSON normalizado (Cache-Control: no-store)
+```
+
+### 3.3 Postulación a una vacante (funcionalidad adicional)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor A as Alumno
+  participant B as BFF
+  participant S as API SII ITC
+  participant V as vacantes-service
+  participant DB as Supabase B
+  actor C as Coordinador
+  A->>B: GET /vacantes
+  B->>V: GET /internal/vacantes (x-internal-key)
+  B->>S: perfil del alumno
+  B-->>A: vacantes + requisitos que cumple / le faltan
+  A->>B: POST /vacantes/:id/postulaciones {mensaje}
+  B->>S: perfil EN VIVO (no se confía en el navegador)
+  B->>B: evalúa avance, promedio y semestre + mínimo institucional (70 % / 80 %)
+  alt no cumple
+    B-->>A: 422 NOT_ELIGIBLE (dice qué le falta)
+  end
+  B->>V: POST /internal/postulaciones (+ foto de elegibilidad)
+  V->>DB: valida cupo, fecha límite y duplicado; inserta
+  C->>V: PATCH /admin/postulaciones/:id {aceptada, comentario}
+  V->>DB: valida cupo; actualiza; registra en bitácora
+  A->>B: GET /postulaciones → ve "Aceptada" + comentario
+```
+
+### 3.4 Ciclo de vida de la sesión
+
+| Evento | Qué pasa |
+|---|---|
+| Vence el `exp` del JWT del SII | El servidor rechaza con `SESSION_EXPIRED` y el cliente cierra la sesión a esa hora |
+| 20 min sin actividad | `SESSION_IDLE` (se valida en servidor y en cliente) |
+| El SII rechaza el token | Se elimina la sesión y se responde `TOKEN_EXPIRED` |
+| Logout en una pestaña | Se borra en BD y **todas las pestañas** regresan al login (BroadcastChannel) |
+| Login desde otro navegador o dispositivo | **Sesión única**: la anterior se borra y ese otro lado ve `SESSION_CLOSED` |
+| Otra cuenta en otra pestaña | Las demás pestañas se recargan para no mezclar datos de dos alumnos |
+
+---
+
+## 4. Funcionamiento de cada sección
+
+| Sección | Ruta | Qué muestra |
+|---|---|---|
+| Login | `/login` | Credenciales del SII, errores específicos y el motivo cuando la sesión se cerró |
+| Inicio | `/dashboard` | KPIs (promedio, avance, reprobadas), gráfica del promedio por semestre, anillos de metas (servicio social, residencia, egreso), créditos complementarios, ficha del perfil y clases de hoy |
+| Calificaciones | `/calificaciones` | Tabla o tarjetas con unidades, calificación final, semáforo y estado; buscador; filtro por periodo y color |
+| Kardex | `/kardex` | Historial completo por semestre, resumen, búsqueda, expandir o contraer e impresión |
+| Horario | `/horario` | Cuadrícula semanal con salón, día actual resaltado y vista por materia |
+| Bolsa | `/bolsa` | Pista de créditos, vacantes con requisitos ✓/✗, filtro "solo en las que califico" y panel de detalle con formulario de postulación |
+| Postulaciones | `/postulaciones` | Estado (Enviada → En revisión → Aceptada / Rechazada), comentario del coordinador y opción de cancelar |
+| Admin | `/admin/*` | Resumen con gráficas, vacantes (crear, editar, publicar, cerrar), postulaciones (revisar, aceptar, rechazar), organizaciones y bitácora |
+
+---
+
+## 5. Lógica de negocio del backend local
+
+| Regla | Implementación |
+|---|---|
+| **Calificación final** = promedio de las unidades capturadas | `academico.ts → calificaciones()` |
+| **Semáforo**: verde ≥ 85 sin unidades reprobadas, amarillo 70–84 o con alguna unidad < 70, rojo < 70 | `academico.ts → semaforo()` |
+| Estado por materia: aprobando, unidad reprobada, reprobando o sin captura | `academico.ts` |
+| Kardex agrupado por semestre; créditos y promedio de aprobadas; reconoce "AC/Acreditada" | `academico.ts → kardex()` |
+| Horario: interpreta `"07:00-08:00"` por día, rango de horas y si hay clases en sábado | `academico.ts → horario()` |
+| Foto del SII: acepta URL o base64 | `academico.ts → normalizarFoto()` |
+| **Elegibilidad**: avance, promedio y semestre contra los requisitos de la vacante **más** el mínimo institucional (servicio social 70 %, residencia 80 %) | `services/elegibilidad.ts` |
+| Cupo, fecha límite y no duplicar postulaciones | `vacantes-service/src/routes/internal.ts` |
+| Al aceptar, no se puede exceder el cupo; roles `admin` / `revisor` | `vacantes-service/src/routes/admin.ts` |
+
+---
+
+## 6. Tecnologías elegidas y justificación
 
 ### Frontend: React + Vite
 
-- **Por qué:** SPA rápida con recarga instantánea (HMR), sin la configuración ni el costo de un servidor SSR. Los datos son privados por alumno y no necesitan SEO ni renderizado en servidor.
-- **Ventajas:** ecosistema grande (React Router, Recharts, Lucide), build estático muy ligero y la misma base de React que ya usamos en prácticas anteriores.
-- **Decisión clave:** en lugar de un sitio estático, Render ejecuta un **gateway mínimo (`server.js`)** que sirve el build y hace de proxy hacia los backends. Así el navegador solo conoce su propio dominio y las cookies son *first-party*. Esto importa porque `onrender.com` está en la Public Suffix List: dos subdominios de Render se tratan como sitios distintos.
-- Librerías: React 19, React Router, Recharts (gráficas), Lucide (íconos), Bricolage Grotesque + Atkinson Hyperlegible (tipografías autoalojadas, sin CDN).
+- **Por qué:** una SPA rápida con HMR instantáneo y sin configuración compleja. Los datos son privados por alumno: no necesitan SEO ni renderizado en servidor, así que SSR (Next.js) no aporta y sí agrega costo.
+- **Ventajas:** ecosistema grande, build estático ligero y el mismo React que usamos en prácticas anteriores.
+- **Librerías:**
+  - React 19 y React Router (navegación)
+  - Recharts (gráficas)
+  - Lucide (íconos)
+  - Bricolage Grotesque + Atkinson Hyperlegible, autoalojadas (sin CDN, compatibles con la CSP)
+- **Decisión técnica:** en producción, el build lo sirve un **gateway mínimo (`server.js`)** que actúa como proxy hacia los backends. Así se ocultan sus URLs y las cookies quedan *first-party*.
 
 ### Backend: Express + TypeScript (Node 22)
 
-- **Por qué:** ya lo dominamos (prácticas de Express, Coolify y Render), arranca rápido en el plan gratuito de Render y basta para un BFF. NestJS daría más estructura con más curva de aprendizaje; Laravel requeriría Docker en Render porque no hay runtime PHP nativo.
-- Librerías: `helmet` (cabeceras), `express-rate-limit`, `zod` (validación), `cookie-parser`, `@supabase/supabase-js`, `pino` (logs con datos sensibles ocultos) y `bcryptjs` (contraseñas de admins).
+- **Por qué:** ya lo dominamos, arranca rápido en el plan gratuito de Render y es suficiente para un BFF. NestJS habría añadido curva de aprendizaje; Laravel requeriría Docker en Render.
+- **Librerías:**
+  - `helmet` (cabeceras)
+  - `express-rate-limit`
+  - `zod` (validación)
+  - `cookie-parser`
+  - `@supabase/supabase-js`
+  - `pino` (logs con datos sensibles ocultos)
+  - `bcryptjs`
 
 ### Datos: Supabase (2 proyectos)
 
 - **A · core:** `sesiones` y `auditoria`. Solo la usa el BFF.
 - **B · vacantes:** `organizaciones`, `vacantes`, `postulaciones`, `admins`, `admin_sesiones` y `bitacora_admin`. Solo la usa vacantes-service.
-- RLS activado **sin políticas**: con la llave pública (anon/publishable) no se puede leer nada. Solo la secret key, que vive en el servidor, tiene acceso.
+- RLS activado **sin políticas** y permisos revocados: con la llave pública no se puede leer nada. Solo la secret key, que vive en el servidor, tiene acceso.
 
 ---
 
-## Seguridad
+## 7. Seguridad
 
 | Riesgo | Medida |
 |---|---|
-| Token visible en el navegador (DevTools, `localStorage`, JS) | El JWT del SII nunca sale del servidor. La cookie contiene un ID aleatorio de 256 bits, `HttpOnly` (JS no la lee), `Secure`, `SameSite=Lax` y con prefijo `__Host-`. `document.cookie`, `localStorage` y `sessionStorage` quedan vacíos (verificado). |
-| Robo de la base de sesiones | En BD solo está el **hash SHA-256** del ID de sesión y el JWT **cifrado AES-256-GCM** con una llave que solo tiene el BFF. |
-| Ver cómo consumimos el API | El navegador solo ve `/api/...` de su mismo dominio. La URL del SII, la del BFF y los headers `Authorization` nunca aparecen en la pestaña Red. CSP `connect-src 'self'`. |
-| Acceso directo a los backends en Render | El BFF y `/admin` exigen `x-gateway-key`, que inyecta el gateway; `/internal` exige `x-internal-key`, que solo tiene el BFF. Sin llave responden 404. |
-| CSRF | `SameSite`, header obligatorio `x-linces-csrf` en peticiones que modifican datos y validación de `Origin`. No hay CORS. |
-| Fuerza bruta | Rate limit de 10 intentos por IP y correo cada 10 minutos (alumnos y admins). |
-| Sesiones viejas | Expiran con el `exp` del JWT (máx. 8 h), por 20 min de inactividad (servidor y cliente), y se eliminan si el SII rechaza el token. El logout borra la sesión en BD. |
-| XSS / clickjacking | CSP estricta, `frame-ancestors 'none'`, Helmet en los 3 servicios. React escapa el contenido. |
-| Datos privados en caché | `Cache-Control: no-store` en todas las respuestas académicas. |
-| Fugas en logs | Pino oculta `cookie`, `authorization`, contraseñas y tokens. |
-| Validación del lado del cliente | La elegibilidad para postularse se recalcula en el BFF con datos frescos del SII. |
+| Token visible en el navegador | El JWT nunca sale del servidor. La cookie es un ID aleatorio `HttpOnly`, `Secure`, `SameSite=Lax`, con prefijo `__Host-`. `document.cookie`, `localStorage` y `sessionStorage` están vacíos. |
+| Robo de la base de sesiones | Solo se guarda el **SHA-256** del ID y el JWT **cifrado AES-256-GCM** con una llave que solo tiene el BFF |
+| Ver cómo consumimos el API | El navegador solo ve `/api/...` de su dominio; nunca la URL del SII ni del BFF, ni headers `Authorization`. CSP `connect-src 'self'`. |
+| Acceso directo a los backends | El BFF y `/admin` exigen `x-gateway-key`; `/internal` exige `x-internal-key`. Sin llave responden **404**. |
+| CSRF | `SameSite`, header obligatorio `x-linces-csrf` y validación de `Origin` (`ALLOWED_ORIGINS`). No hay CORS. |
+| Fuerza bruta | 10 intentos por IP y correo cada 10 min (alumnos y admins) |
+| Sesiones abandonadas o duplicadas | Expiración por `exp`, inactividad, sesión única por alumno, logout sincronizado entre pestañas y limpieza periódica |
+| XSS / clickjacking | CSP estricta, `frame-ancestors 'none'` y Helmet en los 3 servicios |
+| Datos privados en caché | `Cache-Control: no-store` |
+| Contraseñas de admins | bcrypt (costo 12); comparación de tiempo constante aunque el correo no exista |
+| Fugas en logs | Pino oculta cookies, `authorization`, contraseñas y tokens |
 
-> Las DevTools **siempre** muestran las cookies del sitio, incluso las `HttpOnly`. Lo que garantiza este diseño es que la cookie no sirve fuera de este dominio, no contiene el token del SII y se puede revocar.
+> Las DevTools **siempre** muestran las cookies del sitio. Lo que garantiza este diseño es que la cookie no contiene el token del SII, no sirve fuera de este dominio y se revoca en el servidor.
 
----
+### Auditoría automática
 
-## Instalación y ejecución local
-
-### Requisitos
-
-- Node.js 22 (`nvm install 22`)
-- Dos proyectos en [Supabase](https://supabase.com) (el plan gratuito permite 2 activos)
-- Cuenta institucional del SII para probar
-
-### 1. Bases de datos
-
-En cada proyecto de Supabase abre **SQL Editor → New query** y ejecuta:
-
-| Proyecto | Scripts |
-|---|---|
-| A · core | `supabase/core/001_core.sql` |
-| B · vacantes | `supabase/vacantes/001_vacantes.sql` y después `supabase/vacantes/002_seed_simulado.sql` |
-
-De cada proyecto copia la **Project URL** y la **Secret key** (`sb_secret_…`, o la `service_role` si tu proyecto usa llaves legacy) desde **Project Settings → API Keys**.
-
-### 2. Variables de entorno
-
-```bash
-cp bff/.env.example bff/.env
-cp vacantes-service/.env.example vacantes-service/.env
-cp frontend/.env.example frontend/.env
-```
-
-Genera los secretos con:
-
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-| Variable | Dónde | Valor |
-|---|---|---|
-| `SESSION_ENC_KEY` | bff | secreto aleatorio |
-| `VACANTES_INTERNAL_KEY` (bff) = `INTERNAL_KEY` (vacantes) | ambos | el mismo secreto |
-| `GATEWAY_KEY` (bff) = `BFF_GATEWAY_KEY` (frontend) | ambos | el mismo secreto (opcional en local) |
-| `GATEWAY_KEY` (vacantes) = `ADMIN_GATEWAY_KEY` (frontend) | ambos | el mismo secreto (opcional en local) |
-
-### 3. Instalar y levantar (3 terminales)
-
-```bash
-cd vacantes-service && npm install && npm run dev   # :4100
-cd bff              && npm install && npm run dev   # :4000
-cd frontend         && npm install && npm run dev   # :5173
-```
-
-Crea el primer administrador de la bolsa:
-
-```bash
-cd vacantes-service
-npm run crear-admin -- coordinacion@ejemplo.com "UnaContraseñaLarga-2026" "Coordinación de Vinculación" admin
-```
-
-- Alumnos: <http://localhost:5173/login> (cuenta del SII)
-- Administración: <http://localhost:5173/admin/login>
-
-Para probar el build de producción en local: `cd frontend && npm run build && BFF_URL=http://localhost:4000 ADMIN_SERVICE_URL=http://localhost:4100 npm start` → <http://localhost:3000>.
-
----
-
-## Despliegue en Render
-
-### Opción A: Blueprint (recomendada)
-
-1. Sube el repositorio a GitHub.
-2. Render → **New → Blueprint** → elige el repo. Render lee `render.yaml` y crea `linces-bff`, `linces-vacantes` y `linces-itc`. Las llaves compartidas se generan y enlazan solas.
-3. Captura las variables marcadas como `sync: false`:
-
-| Servicio | Variable | Valor |
-|---|---|---|
-| linces-bff | `SUPABASE_CORE_URL`, `SUPABASE_CORE_SECRET_KEY` | proyecto A |
-| linces-bff | `VACANTES_URL` | `https://linces-vacantes.onrender.com` |
-| linces-bff | `ALLOWED_ORIGINS` | `https://linces-itc.onrender.com` |
-| linces-vacantes | `SUPABASE_VACANTES_URL`, `SUPABASE_VACANTES_SECRET_KEY` | proyecto B |
-| linces-vacantes | `ALLOWED_ORIGINS` | `https://linces-itc.onrender.com` |
-| linces-itc | `BFF_URL` | `https://linces-bff.onrender.com` |
-| linces-itc | `ADMIN_SERVICE_URL` | `https://linces-vacantes.onrender.com` |
-
-4. Si Render asignó otras URLs (por ejemplo con sufijo aleatorio), corrige estas variables con las URLs reales y haz **Manual Deploy**.
-
-### Opción B: manual
-
-Crea 3 **Web Services** (runtime Node) con *Root Directory* `bff`, `vacantes-service` y `frontend`:
-
-- Build: `npm ci --include=dev && npm run build`. El `--include=dev` es necesario porque con `NODE_ENV=production` npm omitiría TypeScript y Vite.
-- Start: `npm start`
-- Health check: `/health`
-
-Copia las mismas variables de la tabla anterior y además las llaves compartidas.
-
-### Notas del plan gratuito
-
-- Render apaga cada servicio tras **15 minutos sin tráfico**, y el primer request puede tardar alrededor de un minuto. **Antes de la exposición abre `/health` de los 3 servicios.** El gateway espera hasta 60 s y muestra "El servidor está iniciando".
-- Supabase pausa los proyectos tras **7 días sin uso**; reactívalos desde el dashboard antes de la demo.
-- Los servicios gratuitos de Render no reciben tráfico de red privada, así que la comunicación entre servicios usa las URLs públicas protegidas por llaves.
-
----
-
-## Endpoints
-
-### BFF (navegador → `/api/*`)
-
-| Método | Ruta | Descripción |
-|---|---|---|
-| POST | `/auth/login` | Login contra el SII; crea la sesión y la cookie |
-| GET | `/auth/session` | Estado de la sesión (para proteger rutas) |
-| POST | `/auth/logout` | Elimina la sesión |
-| GET | `/estudiante` | Perfil + elegibilidad de servicio social y residencia |
-| GET | `/calificaciones` | Materias, parciales, calificación final, semáforo y resumen |
-| GET | `/kardex` | Kardex agrupado por semestre y resumen |
-| GET | `/horario` | Sesiones por día y hora |
-| GET | `/vacantes?tipo=&q=` | Vacantes publicadas con la elegibilidad del alumno |
-| GET | `/vacantes/:id` | Detalle de una vacante |
-| POST | `/vacantes/:id/postulaciones` | Postularse (valida requisitos con el SII) |
-| GET | `/postulaciones` | Mis postulaciones |
-| POST | `/postulaciones/:id/cancelar` | Cancelar una postulación pendiente |
-
-### vacantes-service
-
-- `/internal/*` (solo BFF): `GET /vacantes`, `GET /vacantes/:id`, `GET|POST /postulaciones` y `POST /postulaciones/:id/cancelar`.
-- `/admin/*` (panel, vía `/admin-api/*`):
-  - `POST /auth/login|logout` y `GET /auth/me`
-  - `GET /estadisticas`
-  - CRUD de `/organizaciones` y `/vacantes`
-  - `GET /postulaciones` y `PATCH /postulaciones/:id`
-  - `GET /bitacora`
-
----
-
-## Capturas de pantalla
-
-> ⚠️ Las capturas de `docs/capturas/` se tomaron en desarrollo. **Antes de entregar, reemplázalas por capturas de producción conectadas al SII real** con los mismos nombres de archivo.
-
-| Login | Error de credenciales |
-|---|---|
-| ![Login](docs/capturas/01-login.png) | ![Error](docs/capturas/03-login-error.png) |
-
-| Dashboard | Calificaciones |
-|---|---|
-| ![Dashboard](docs/capturas/04-dashboard.png) | ![Calificaciones](docs/capturas/05-calificaciones.png) |
-
-| Kardex | Horario |
-|---|---|
-| ![Kardex](docs/capturas/06-kardex.png) | ![Horario](docs/capturas/07-horario.png) |
-
-| Bolsa de vacantes | Postulación |
-|---|---|
-| ![Bolsa](docs/capturas/08-bolsa.png) | ![Postulación](docs/capturas/10-postulado.png) |
-
-| Token inválido | Móvil |
-|---|---|
-| ![Token inválido](docs/capturas/12-token-invalido.png) | ![Móvil](docs/capturas/m1-dashboard.png) |
-
-| Admin: resumen | Admin: postulaciones |
-|---|---|
-| ![Admin](docs/capturas/a1-resumen.png) | ![Admin postulaciones](docs/capturas/a4-postulaciones.png) |
-
----
-
-## Guion para la exposición
-
-Todos los integrantes deben participar. Reparto sugerido:
-
-1. **Problema y propuesta**: la bolsa de vacantes y por qué ayuda a los alumnos ([PROPUESTA.md](docs/PROPUESTA.md)).
-2. **Tecnología y arquitectura**: por qué React + Vite y Express, el diagrama de 3 servicios y las 2 bases de datos, y "datos centralizados, operación descentralizada".
-3. **Demo en vivo con el SII real**:
-   - login con contraseña incorrecta y luego correcta;
-   - dashboard, calificaciones (filtro y semáforo), kardex y horario;
-   - postularse a una vacante;
-   - en el panel admin, aceptar la postulación, y como alumno, ver el cambio de estado.
-4. **Seguridad**: abrir DevTools y mostrar que la pestaña Red solo tiene `/api/...`, que `document.cookie` y `localStorage` están vacíos y que la cookie es `HttpOnly` con un ID opaco. Luego, llamar al BFF directo en su URL de Render y mostrar el 404 sin `x-gateway-key`.
-
----
-
-## Auditoría de seguridad
-
-`tools/auditoria.mjs` revisa unas 70 cosas sin imprimir nunca tokens ni contraseñas:
-
-- el bundle público (que no traiga secretos ni URLs internas);
-- la cookie de sesión y sus atributos;
+`tools/auditoria.mjs` hace cerca de 70 pruebas sin imprimir nunca tokens ni contraseñas:
+- que el bundle no contenga secretos;
+- los atributos de la cookie;
 - que ninguna respuesta de la API traiga tokens;
 - CSRF, accesos sin sesión y path traversal;
-- logout con revocación en el servidor;
-- acceso directo a los backends;
+- logout revocado en el servidor;
+- 404 al entrar directo a los backends;
 - RLS de Supabase con la llave pública;
 - rate limit;
 - `.env` versionados y `npm audit`.
 
 ```bash
-# Local (con los 3 servicios corriendo)
-node tools/auditoria.mjs --url http://localhost:5173
-
-# Producción (la prueba completa)
 node tools/auditoria.mjs --url https://linces-itc.onrender.com \
   --bff https://linces-bff.onrender.com --vacantes https://linces-vacantes.onrender.com \
   --supabase https://REF_CORE.supabase.co=sb_publishable_xxx \
   --supabase https://REF_VAC.supabase.co=sb_publishable_yyy --rate
 ```
 
-Termina con código 1 si alguna prueba falla.
+---
 
-## Estructura
+## 8. Diseño visual
+
+- **Identidad Linces:** logo circular, fondo con el mosaico del lince y paleta verde institucional con dorado para metas y avance.
+- **Menú superior** fijo; en celular pasa a una fila deslizable.
+- **Paneles oscuros** en Inicio, Calificaciones, Kardex, Horario, Bolsa y Postulaciones:
+  - gráfica de área con brillo y línea del mínimo aprobatorio;
+  - anillos de progreso;
+  - tarjeta destacada con degradado.
+- **Pista de créditos** con los hitos de 70 %, 80 % y 100 %, y la proyección si apruebas lo que cursas.
+- **Accesibilidad:**
+  - foco visible con teclado;
+  - el color nunca es la única señal (texto oculto para lectores de pantalla en el semáforo);
+  - respeta `prefers-reduced-motion`;
+  - tipografía Atkinson Hyperlegible.
+- **Responsivo** desde 360 px; el kardex se puede imprimir.
+
+---
+
+## 9. Instalación y ejecución local
+
+**Requisitos**
+- Node.js 22 (`nvm install 22`)
+- Dos proyectos de Supabase
+- Cuenta del SII
+
+```bash
+git clone https://github.com/21031562/Linces-ITC.git
+cd Linces-ITC
+```
+
+**1. Bases de datos.** En **SQL Editor** de cada proyecto, ejecuta:
+
+| Proyecto | Scripts |
+|---|---|
+| A · core | `supabase/core/001_core.sql` |
+| B · vacantes | `supabase/vacantes/001_vacantes.sql` y luego `002_seed_simulado.sql` |
+
+Copia la **Project URL** y la **Secret key** de cada uno (Project Settings → API Keys).
+
+**2. Variables de entorno**
+
+```bash
+cp bff/.env.example bff/.env
+cp vacantes-service/.env.example vacantes-service/.env
+cp frontend/.env.example frontend/.env
+ENC=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+INT=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+sed -i "s|^SESSION_ENC_KEY=.*|SESSION_ENC_KEY=$ENC|; s|^VACANTES_INTERNAL_KEY=.*|VACANTES_INTERNAL_KEY=$INT|" bff/.env
+sed -i "s|^INTERNAL_KEY=.*|INTERNAL_KEY=$INT|" vacantes-service/.env
+# Después edita las URLs y Secret keys de Supabase en bff/.env y vacantes-service/.env
+```
+
+**3. Instalar y levantar** (3 terminales)
+
+```bash
+(cd bff && npm install) && (cd vacantes-service && npm install) && (cd frontend && npm install)
+
+cd vacantes-service && npm run dev   # :4100
+cd bff              && npm run dev   # :4000
+cd frontend         && npm run dev   # :5173
+```
+
+**4. Crear el administrador de la bolsa**
+
+```bash
+cd vacantes-service
+npm run crear-admin -- coordinacion@ejemplo.com "UnaContraseñaLarga-2026" "Coordinación de Vinculación" admin
+```
+
+- Alumnos: http://localhost:5173/login
+- Admin: http://localhost:5173/admin/login
+
+---
+
+## 10. Despliegue en Render
+
+1. **New → Blueprint** → repositorio `Linces-ITC`. Render lee `render.yaml`, crea `linces-bff`, `linces-vacantes` y `linces-itc`, y genera y enlaza las llaves compartidas.
+2. Captura las variables `sync: false`:
+
+| Servicio | Variables |
+|---|---|
+| linces-bff | `SUPABASE_CORE_URL`, `SUPABASE_CORE_SECRET_KEY`, `VACANTES_URL`, `ALLOWED_ORIGINS` |
+| linces-vacantes | `SUPABASE_VACANTES_URL`, `SUPABASE_VACANTES_SECRET_KEY`, `ALLOWED_ORIGINS` |
+| linces-itc | `BFF_URL`, `ADMIN_SERVICE_URL` |
+
+3. `ALLOWED_ORIGINS` debe ser **exactamente** la URL del frontend (`https://linces-itc.onrender.com`, sin `/` final). Si no, aparece "Origen no permitido".
+4. Cada `git push` a `main` vuelve a desplegar.
+
+**Notas**
+- **Repositorio:** la app de Render en GitHub la debe instalar el **dueño** del repositorio; a un colaborador no le aparece.
+- **Plan gratuito:** cada servicio se duerme tras 15 min sin uso y tarda cerca de un minuto en despertar. Antes de la demo abre `/health` de los 3 servicios.
+- **Comandos de build:** `npm ci --include=dev && npm run build`. El `--include=dev` es necesario porque con `NODE_ENV=production` npm omitiría TypeScript y Vite.
+
+---
+
+## 11. Endpoints
+
+### BFF (navegador → `/api/*`)
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/auth/login` | Login contra el SII; crea la sesión y la cookie |
+| GET | `/auth/session` | Estado de la sesión |
+| POST | `/auth/logout` | Elimina la sesión |
+| GET | `/estudiante` | Perfil + elegibilidad de servicio social y residencia |
+| GET | `/calificaciones` | Materias, unidades, final, semáforo y resumen |
+| GET | `/kardex` | Kardex por semestre y resumen |
+| GET | `/horario` | Sesiones por día y hora |
+| GET | `/vacantes?tipo=&q=` | Vacantes con la elegibilidad del alumno |
+| GET | `/vacantes/:id` | Detalle |
+| POST | `/vacantes/:id/postulaciones` | Postularse (valida contra el SII) |
+| GET | `/postulaciones` | Mis postulaciones |
+| POST | `/postulaciones/:id/cancelar` | Cancelar una postulación pendiente |
+
+### vacantes-service
+
+- `/internal/*` (solo el BFF, con `x-internal-key`): vacantes publicadas, detalle, crear, listar y cancelar postulaciones.
+- `/admin/*` (panel, vía `/admin-api/*`):
+  - `auth/login|logout|me`
+  - `estadisticas`
+  - CRUD de `organizaciones` y `vacantes`
+  - `postulaciones` (listar y cambiar estado)
+  - `bitacora`
+
+---
+
+## 12. Capturas de pantalla
+
+> ⚠️ Antes de entregar, reemplaza estas capturas por las de **producción conectada al SII real**, con los mismos nombres de archivo en `docs/capturas/`.
+
+| Login | Error de credenciales |
+|---|---|
+| ![Login](docs/capturas/01-login.png) | ![Error](docs/capturas/03-login-error.png) |
+
+| Inicio | Calificaciones |
+|---|---|
+| ![Inicio](docs/capturas/04-dashboard.png) | ![Calificaciones](docs/capturas/05-calificaciones.png) |
+
+| Kardex | Horario |
+|---|---|
+| ![Kardex](docs/capturas/06-kardex.png) | ![Horario](docs/capturas/07-horario.png) |
+
+| Bolsa | Detalle y postulación |
+|---|---|
+| ![Bolsa](docs/capturas/08-bolsa.png) | ![Detalle](docs/capturas/09-drawer.png) |
+
+| Mis postulaciones | Token inválido |
+|---|---|
+| ![Postulaciones](docs/capturas/11-mis-postulaciones.png) | ![Token inválido](docs/capturas/12-token-invalido.png) |
+
+| Admin: resumen | Admin: postulaciones |
+|---|---|
+| ![Admin](docs/capturas/a1-resumen.png) | ![Admin postulaciones](docs/capturas/a4-postulaciones.png) |
+
+| Celular |
+|---|
+| ![Móvil](docs/capturas/m1-dashboard.png) |
+
+---
+
+## 13. Preguntas frecuentes para la defensa
+
+**"El documento dice que la app debe interactuar directamente con la API del SII. ¿Por qué pasan por un backend?"**
+La misma sección **BackEnd** del documento pide que el backend local sea "un intermediario seguro entre el frontend y la API institucional". "Directamente" se refiere a usar la API real y no simular respuestas: cada pantalla de los puntos 1 a 4 se alimenta de una llamada real al SII en ese momento. Si el navegador llamara al SII, el token quedaría expuesto en el navegador.
+
+**"¿Dónde guardan el token JWT?"**
+En Supabase A, cifrado con AES-256-GCM. El navegador solo tiene un ID opaco en una cookie `HttpOnly`. Esto se puede demostrar en DevTools: `document.cookie` vacío y ningún `Authorization` en la pestaña Red.
+
+**"¿Guardan calificaciones o kardex?"**
+No. Se consultan en vivo en cada petición. Solo se guarda una foto mínima (avance, promedio, semestre y créditos) al postularse, como evidencia de elegibilidad.
+
+**"¿Cómo saben que el token expiró?"**
+De tres formas: el BFF lee el `exp` del JWT y fija con él la expiración de la sesión; el cliente programa el cierre a esa hora; y si el SII rechaza el token antes, la sesión se elimina y se responde `TOKEN_EXPIRED`.
+
+**"¿Por qué la calificación final es un promedio?"**
+El endpoint de calificaciones solo entrega las unidades. La final se calcula en el backend con las unidades capturadas, y también se marca cuando una unidad está por debajo de 70.
+
+**"¿Por qué React + Vite y no Next.js?"**
+Es una SPA privada: no necesita SEO ni SSR, Vite da HMR instantáneo y build ligero, y la seguridad que Next resolvería con API Routes la resolvemos con el BFF y el gateway, que además es el backend local que pide el examen.
+
+**"¿Por qué dos bases de datos?"**
+Operación descentralizada: cada servicio es dueño de sus datos. Si la bolsa falla, el login y la consulta académica siguen funcionando, y una filtración en un servicio no expone los datos del otro.
+
+**"¿El alumno puede postularse aunque no cumpla?"**
+No. El botón se oculta en el frontend, pero la validación real está en el BFF, que vuelve a consultar el SII en el momento de postularse.
+
+**"¿Qué pasa si inicio sesión en dos lugares?"**
+Sesión única: la anterior se cierra en el servidor y ese dispositivo muestra el motivo. El logout en una pestaña cierra todas las pestañas.
+
+---
+
+## 14. Guion de la exposición
+
+Todos los integrantes participan.
+
+1. **Propuesta:** problema y beneficios de la bolsa ([PROPUESTA.md](docs/PROPUESTA.md)).
+2. **Tecnología y arquitectura:** las dos capas de backend, el diagrama de 3 servicios y 2 bases, y la justificación de React + Vite y Express.
+3. **Demo en vivo con el SII real:**
+   - login con contraseña incorrecta y luego correcta;
+   - Inicio, Calificaciones (filtro y semáforo), Kardex y Horario;
+   - postularse;
+   - en el panel admin, aceptar la postulación con un comentario;
+   - el alumno ve el cambio.
+4. **Seguridad:**
+   - mostrar DevTools (pestaña Red solo con `/api`, `document.cookie` vacío, cookie `HttpOnly`);
+   - abrir el BFF directo y ver el 404;
+   - cerrar sesión en una pestaña y ver que se cierra la otra;
+   - correr `tools/auditoria.mjs`.
+
+---
+
+## 15. Estructura del repositorio y equipo
 
 ```
-linces-itc/
+Linces-ITC/
 ├── bff/                  # Backend local (Express + TS) → SII + Supabase A
 ├── vacantes-service/     # Funcionalidad adicional + API admin → Supabase B
 ├── frontend/             # React + Vite + gateway server.js
@@ -343,10 +581,9 @@ linces-itc/
 │   └── vacantes/         # SQL de Supabase B + datos simulados
 ├── docs/                 # Propuesta y capturas
 ├── tools/auditoria.mjs   # Auditoría de seguridad
-└── render.yaml           # Blueprint de Render
+└── render.yaml           # Blueprint de Render (3 servicios)
 ```
 
-## Equipo
-
-- Uriel Alejandro Martínez Martínez (21031562)
-- _Agregar integrantes_
+**Equipo**
+- Uriel Alejandro Martínez Martínez
+- Rafael Barranco Mendoza
